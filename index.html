@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>内定者懇親会BBQビンゴ</title>
+<style>
+:root{--bg:#f8fafc;--card:#fff;--accent:#0ea5a4;--text:#111;--muted:#777;}
+body{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN",Meiryo,Roboto,Arial,sans-serif;
+background:var(--bg);color:var(--text);margin:0;padding:18px;}
+.container{max-width:700px;margin:auto;}
+h1{font-size:22px;margin-bottom:4px;}
+.sub{color:var(--muted);font-size:14px;margin-bottom:18px;}
+.grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;}
+.cell{background:var(--card);padding:12px;min-height:70px;border-radius:10px;
+display:flex;align-items:center;justify-content:center;text-align:center;
+font-size:13px;cursor:pointer;user-select:none;box-shadow:0 1px 3px rgba(0,0,0,0.08);}
+.cell.marked{background:linear-gradient(135deg,var(--accent),#38bdf8);color:#fff;}
+.center{font-weight:bold;background:#e0f7f5;}
+.controls{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;}
+.btn{flex:1;padding:10px;border:none;border-radius:8px;cursor:pointer;font-size:14px;}
+.primary{background:var(--accent);color:#fff;}
+.secondary{background:#fff;border:1px solid #ccc;}
+.footer{margin-top:14px;font-size:12px;color:var(--muted);text-align:center;}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>内定者懇親会 BBQビンゴ 🎯</h1>
+  <div class="sub">マスをタップしてマーク！開くたびにランダムでカードが変わります。</div>
+  <div id="grid" class="grid"></div>
+  <div class="controls">
+    <button id="new" class="btn secondary">新しいカードを作る</button>
+    <button id="share" class="btn primary">このカードのURLをコピー</button>
+  </div>
+  <div class="footer">© BBQ内定者懇親会</div>
+</div>
+
+<script>
+const items = [
+"焼きそば食べた","「これ焼けてます？」って聞いた","写真撮った📸","炭が強すぎて避難","名札の読み方を間違えた",
+"焼き奉行が誕生🔥","「乾杯！」を言いそびれた","タレこぼした","マシュマロ焼いた🍡","「お肉足りなくない？」って言った",
+"煙が目に入った😭","誰かがずっとトング持ってる","「もうお腹いっぱい〜」","写真撮り直し3回目📷","片付けめっちゃ頑張ってる人",
+"飲み物ぬるい🥤","自己紹介で噛んだ","焼きおにぎり登場🍙","先輩に肉をもらった🍖","風で紙皿が飛んだ💨",
+"野菜をちゃんと食べた","「この会社入ってよかった〜」って誰かが言った","虫に刺された🦟","締めの焼きそば大人気！"
+];
+
+function shuffle(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+function newCard(seed){
+  const arr=shuffle(items);
+  const cells=[];
+  let i=0;
+  for(let r=0;r<5;r++){
+    for(let c=0;c<5;c++){
+      if(r===2 && c===2){cells.push("FREE");}
+      else{cells.push(arr[i++]);}
+    }
+  }
+  return cells;
+}
+
+function render(){
+  const grid=document.getElementById("grid");
+  grid.innerHTML="";
+  cells.forEach((text,idx)=>{
+    const div=document.createElement("div");
+    div.textContent=text;
+    div.className="cell"+(text==="FREE"?" center":"");
+    if(marked[idx])div.classList.add("marked");
+    div.onclick=()=>{
+      if(text==="FREE")return;
+      marked[idx]=!marked[idx];
+      saveState();
+      render();
+    };
+    grid.appendChild(div);
+  });
+}
+
+function saveState(){
+  localStorage.setItem("bbq_bingo_state",JSON.stringify({cells,marked}));
+}
+
+function loadState(){
+  const v=localStorage.getItem("bbq_bingo_state");
+  return v?JSON.parse(v):null;
+}
+
+let state=loadState();
+let cells,marked;
+if(state){cells=state.cells;marked=state.marked;}
+else{cells=newCard();marked={};}
+
+render();
+
+document.getElementById("new").onclick=()=>{
+  cells=newCard();
+  marked={};
+  saveState();
+  render();
+};
+document.getElementById("share").onclick=async()=>{
+  const url=location.href;
+  try{await navigator.clipboard.writeText(url);alert("このページのURLをコピーしました！");}
+  catch{prompt("URLをコピーしてください：",url);}
+};
+</script>
+</body>
+</html>
